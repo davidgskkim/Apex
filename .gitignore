@@ -1,0 +1,9 @@
+# Ignore the node_modules folder
+/server/node_modules
+/client/node_modules
+
+# Ignore the .env secret file
+/server/.env
+
+# Ignore build output
+/client/dist

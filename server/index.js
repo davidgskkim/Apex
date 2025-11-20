@@ -133,7 +133,7 @@ app.post('/api/exercises', async (req, res) => {
 
 app.post('/api/workouts', async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, date } = req.body;
 
     const token = req.headers.authorization.split(' ')[1];
 
@@ -145,8 +145,8 @@ app.post('/api/workouts', async (req, res) => {
     const userId = decoded.user.id; // Get the user's ID
 
     const newWorkout = await sql`
-      INSERT INTO workouts (name, user_id)
-      VALUES (${name}, ${userId})
+      INSERT INTO workouts (name, user_id, workout_date)
+      VALUES (${name}, ${userId}, ${date || new Date()})
       RETURNING *
     `;
     

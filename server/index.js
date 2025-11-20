@@ -332,6 +332,40 @@ app.delete('/api/logs/:id', async (req, res) => {
   }
 });
 
+// --- DELETE WORKOUT ---
+app.delete('/api/workouts/:id', async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Authorization denied' });
+    jwt.verify(token, process.env.JWT_SECRET);
+    
+    const { id } = req.params;
+    // Cascade delete handles logs automatically if set up in SQL, 
+    // but explicit delete is safer for now
+    await sql`DELETE FROM workouts WHERE workout_id = ${id}`;
+    res.json({ message: 'Workout deleted' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// --- DELETE EXERCISE ---
+app.delete('/api/exercises/:id', async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Authorization denied' });
+    jwt.verify(token, process.env.JWT_SECRET);
+    
+    const { id } = req.params;
+    await sql`DELETE FROM exercises WHERE exercise_id = ${id}`;
+    res.json({ message: 'Exercise deleted' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 const PORT = 5000
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`)

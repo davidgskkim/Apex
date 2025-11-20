@@ -83,6 +83,26 @@ function Dashboard() {
     }
   }
 
+  const handleDeleteWorkout = async (id) => {
+    if (!window.confirm('Delete this workout?')) return;
+    try {
+      await apiClient.delete(`/workouts/${id}`);
+      fetchWorkouts(); // Refresh list
+    } catch (err) {
+      console.error('Failed to delete workout', err);
+    }
+  };
+
+  const handleDeleteExercise = async (id) => {
+    if (!window.confirm('Delete this exercise?')) return;
+    try {
+      await apiClient.delete(`/exercises/${id}`);
+      fetchExercises(); // Refresh list
+    } catch (err) {
+      console.error('Failed to delete exercise', err);
+    }
+  }
+
   return (
     <div>
       <h1>Welcome to Your Dashboard</h1>
@@ -133,6 +153,12 @@ function Dashboard() {
               <Link to={`/workout/${workout.workout_id}`}>
                 {workout.name} - {new Date(workout.workout_date).toLocaleDateString()}
               </Link>  
+              <button 
+                onClick={() => handleDeleteWorkout(workout.workout_id)}
+                style={{ marginLeft: '10px', color: 'red' }}
+              >
+                Delete
+              </button>
             </li>
           ))}
         </ul>
@@ -173,6 +199,12 @@ function Dashboard() {
           {exercises.map((exercise) => (
             <li key={exercise.exercise_id}>
               {exercise.name} ({exercise.category})
+              <button 
+                onClick={() => handleDeleteExercise(exercise.exercise_id)}
+                style={{ marginLeft: '10px', color: 'red' }}
+              >
+                Delete
+              </button>
             </li>
           ))}
         </ul>

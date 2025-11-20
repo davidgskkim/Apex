@@ -136,6 +136,24 @@ function Dashboard() {
       <div>
         <h2>Create a New Exercise</h2>
         <form onSubmit={handleCreateExercise}>
+          <div>
+            <label>Exercise Name:</label>
+            <input
+              type="text"
+              value={exerciseName}
+              onChange={(e) => setExerciseName(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label>Category:</label>
+            <input
+              type="text"
+              value={exerciseCategory}
+              onChange={(e) => setExerciseCategory(e.target.value)}
+              required
+          />
+          </div>
           <button type="submit">Create Exercise</button>
         </form>
       </div>

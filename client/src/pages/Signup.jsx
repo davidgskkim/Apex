@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import axios from 'axios'
+import apiClient from '../api'
 import { useNavigate } from 'react-router-dom'
 
 function Signup() {
@@ -12,8 +12,8 @@ function Signup() {
     const handleSubmit = async (e) => {
         e.preventDefault(); 
         try {
-            const response = await axios.post(
-                'http://localhost:5000/api/auth/signup', 
+            const response = await apiClient.post(
+                '/auth/signup', 
                 { email, username, password } 
             )
             console.log('Signup successful! Token:', response.data.token)

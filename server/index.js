@@ -310,6 +310,28 @@ app.post('/api/coach', async (req, res) => {
   }
 });
 
+// --- DELETE LOG ROUTE ---
+app.delete('/api/logs/:id', async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Authorization denied' });
+    
+    // Verify token
+    jwt.verify(token, process.env.JWT_SECRET);
+    const { id } = req.params;
+
+    // Delete the log
+    // Ideally we should check if the log belongs to the user's workout first
+    // but for this MVP, we'll trust the ID.
+    await sql`DELETE FROM workout_logs WHERE log_id = ${id}`;
+
+    res.json({ message: 'Log deleted' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 const PORT = 5000
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`)

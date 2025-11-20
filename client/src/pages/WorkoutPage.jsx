@@ -73,7 +73,19 @@ function WorkoutPage() {
     } catch (err) {
       console.error('Failed to add log:', err);
     }
-  };
+  }
+
+  const handleDeleteLog = async (logId) => {
+    if (!window.confirm('Are you sure?')) return // Simple confirmation
+
+    try {
+      await apiClient.delete(`/logs/${logId}`)
+      // Re-fetch logs to update UI
+      fetchLogs()
+    } catch (err) {
+      console.error('Failed to delete log:', err)
+    }
+  }
 
   return (
     <div>
@@ -140,6 +152,12 @@ function WorkoutPage() {
           <li key={log.log_id}>
             {log.exercise_name}: {log.sets} sets x {log.reps} reps @ {log.weight_kg}kg
             {log.notes && ` - Notes: ${log.notes}`} {/* Only show notes if they exist */}
+            <button 
+              onClick={() => handleDeleteLog(log.log_id)}
+              style={{ marginLeft: '10px', color: 'red' }}
+            >
+              Delete
+            </button>
           </li>
         ))}
       </ul>

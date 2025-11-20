@@ -7,10 +7,10 @@ function Dashboard() {
 
   const [exercises, setExercises] = useState([]);
   const [workouts, setWorkouts] = useState([])
-
   const [exerciseName, setExerciseName] = useState('')
   const [exerciseCategory, setExerciseCategory] = useState('')
   const [workoutName, setWorkoutName] = useState('')
+  const [workoutDate, setWorkoutDate] = useState('')
 
   const handleLogout = useCallback (() => {
     localStorage.removeItem('token');
@@ -53,7 +53,7 @@ function Dashboard() {
         category: exerciseCategory,
       });
       
-      console.log('Created exercise:', response.data);
+      console.log('Created exercise:', response.data)
       
       // Clear the form fields
       setExerciseName('');
@@ -63,7 +63,7 @@ function Dashboard() {
       fetchExercises(); 
       
     } catch (err) {
-      console.error('Failed to create exercise:', err);
+      console.error('Failed to create exercise:', err)
     }
   }
 
@@ -72,15 +72,14 @@ function Dashboard() {
     try {
       const response = await apiClient.post('/workouts', {
         name: workoutName,
-      });
-      
-      console.log('Created workout:', response.data);
-      
-      setWorkoutName('');
-      fetchWorkouts(); 
-      
+        date: workoutDate,
+      })
+      console.log('Created workout:', response.data)
+      setWorkoutName('')
+      setWorkoutDate('')
+      fetchWorkouts()
     } catch (err) {
-      console.error('Failed to create workout:', err);
+      console.error('Failed to create workout:', err)
     }
   }
 
@@ -110,6 +109,14 @@ function Dashboard() {
               onChange={(e) => setWorkoutName(e.target.value)}
               placeholder="e.g., Leg Day"
               required
+            />
+          </div>
+          <div>
+            <label>Date (Optional):</label>
+            <input
+              type="date" 
+              value={workoutDate}
+              onChange={(e) => setWorkoutDate(e.target.value)}
             />
           </div>
           <button type="submit">Start Workout</button>

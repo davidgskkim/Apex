@@ -34,12 +34,23 @@ function OnboardingPage() {
     try {
       // 1. Create each workout in the database
       // We map over the suggested workouts and send a POST request for each
-      const promises = generatedPlan.workouts.map(workoutName => 
-        apiClient.post('/workouts', { name: workoutName })
-      );
+      const today = new Date();
+      const promises = generatedPlan.workouts.map((workoutName, index) => {
+        // Calculate date: Today + index days
+        const workoutDate = new Date();
+        workoutDate.setDate(today.getDate() + index); // Spaced out by 1 day each
+        workoutDate.setHours(12, 0, 0, 0);
+        
+        // Convert to YYYY-MM-DD string for the API
+        const dateString = workoutDate.toISOString()
+
+        return apiClient.post('/workouts', { 
+          name: workoutName, 
+          date: dateString // <-- Send the future date
+        });
+      })
       
       await Promise.all(promises);
-
       // 2. Redirect to Dashboard
       navigate('/');
     } catch (err) {
@@ -128,12 +139,12 @@ function OnboardingPage() {
 
             {/* THIS IS THE NATURAL FAQ SECTION */}
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 text-sm">
-              <h4 className="font-bold text-gray-700 mb-2">🚀 How to use Apex:</h4>
-              <ol className="list-decimal pl-4 space-y-2 text-gray-600">
-                <li>We will save these workouts to your <strong>Dashboard</strong>.</li>
-                <li>When you go to the gym, click <strong>"Start Workout"</strong> on the specific day.</li>
-                <li>Add exercises and log your sets as you go!</li>
-              </ol>
+                <h4 className="font-bold text-gray-700 mb-2">🚀 Getting Started with Apex:</h4>
+                <ol className="list-decimal pl-4 space-y-2 text-gray-600">
+                    <li><strong>Dashboard:</strong> We've created a schedule for you below. Click "Start Workout" on the scheduled day to begin logging.</li>
+                    <li><strong>Progress:</strong> As you log weights, use the "Analytics" button to visualize your strength gains over time.</li>
+                    <li><strong>AI Coach:</strong> Confused about form? Have an injury? Click the "AI Coach" button to chat with an expert anytime.</li>
+                </ol>
             </div>
 
             <button 

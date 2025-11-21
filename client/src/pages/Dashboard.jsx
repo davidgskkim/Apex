@@ -105,7 +105,7 @@ function Dashboard() {
           onClick={() => navigate('/coach')}
           className="bg-purple-600 text-white p-4 rounded-lg shadow hover:bg-purple-700 transition text-center font-bold"
         >
-          AI Form Coach 🤖
+          AI Coach 🤖
         </button>
       </div>
 

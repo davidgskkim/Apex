@@ -16,83 +16,90 @@ const openai = new OpenAI({
 
 // Signup
 app.post('/api/auth/signup', async (req, res) => {
-    try {
-        // Get Data
-        const { email, username, password } = req.body
+  try {
+    const { email, username, password } = req.body;
 
-        // Hash Password
-        const salt = await bcrypt.genSalt(10)
-        const passwordHash = await bcrypt.hash(password, salt)
+    // 1. Check if user already exists (Manual Check)
+    const existingUser = await sql`
+      SELECT * FROM users WHERE email = ${email} OR username = ${username}
+    `;
 
-        // 3. Save user into DB
-        const newUser = await sql`
-            INSERT INTO users (email, username, password_hash)
-            VALUES (${email}, ${username}, ${passwordHash})
-            RETURNING *
-        `
-        console.log('New user signup:', { email, username })
-        console.log('Hashed Password:', passwordHash)
-
-        // Create JWT Token
-        const payload = {
-            user: {
-                id: newUser[0].user_id, 
-            },
-        }
-        const token = jwt.sign(
-            payload,
-            process.env.JWT_SECRET, 
-            { expiresIn: '1h' } 
-        )
-
-        // Send Response Back
-        res.status(201).json({ token })
-    } catch (err) {
-        console.error(err.message)
-        res.status(500).json({ error: 'Server error' })
+    if (existingUser.length > 0) {
+      return res.status(400).json({ error: 'Email or Username already taken' });
     }
-})
+
+    // 2. Hash password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // 3. Create user
+    const newUser = await sql`
+      INSERT INTO users (email, username, password_hash)
+      VALUES (${email}, ${username}, ${passwordHash})
+      RETURNING *
+    `;
+
+    // 4. Create Token
+    const payload = { user: { id: newUser[0].user_id } };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(201).json({ token });
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Login
 app.post('/api/auth/login', async (req, res) => {
-    try {
-        // Get Data
-        const { email, password } = req.body
+  try {
+    const { email, password } = req.body;
 
-        // Look for user in db based on email 
-        const user = await sql`
-            SELECT * FROM users
-            WHERE email = ${email}
-        `
+    // 1. Find the user
+    const users = await sql`
+      SELECT * FROM users
+      WHERE email = ${email}
+    `;
 
-        // Compare the passwords
-        const isPasswordValid = await bcrypt.compare(
-            password, // The plain-text password from the user
-            user[0].password_hash // The hashed password from our database
-        )
-        if (!isPasswordValid) {
-            return res.status(400).json({ error: 'Invalid credentials' })
-        }   
-
-        // Create JWT Token
-        const payload = {
-            user: {
-                id: user[0].user_id, // Get the ID from the user we *found*
-            },
-        }
-        const token = jwt.sign(
-            payload,
-            process.env.JWT_SECRET, 
-            { expiresIn: '1h' } 
-        )
-
-        // Send Token Back
-        res.json({ token })
-    } catch (err) {
-        console.error(err.message)
-        res.status(500).json({ error: 'Server error' })
+    // 2. SAFETY CHECK (This is what was missing/failing)
+    // We verify that we actually got a user back before checking the password
+    if (users.length === 0) {
+      return res.status(400).json({ error: 'Invalid credentials' });
     }
-})
+
+    const user = users[0]; // Get the first user
+
+    // 3. Compare passwords
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.password_hash
+    );
+
+    if (!isPasswordValid) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    // 4. Create token
+    const payload = {
+      user: {
+        id: user.user_id,
+      },
+    };
+
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.json({ token });
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 app.get('/api/exercises', async (req, res) => {
   try {

@@ -1,216 +1,221 @@
-import Reac, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import apiClient from '../api'
+import apiClient from '../api';
 
 function Dashboard() {
   const navigate = useNavigate();
-
   const [exercises, setExercises] = useState([]);
-  const [workouts, setWorkouts] = useState([])
-  const [exerciseName, setExerciseName] = useState('')
-  const [exerciseCategory, setExerciseCategory] = useState('')
-  const [workoutName, setWorkoutName] = useState('')
-  const [workoutDate, setWorkoutDate] = useState('')
+  const [workouts, setWorkouts] = useState([]);
+  
+  const [exerciseName, setExerciseName] = useState('');
+  const [exerciseCategory, setExerciseCategory] = useState('');
+  const [workoutName, setWorkoutName] = useState('');
+  const [workoutDate, setWorkoutDate] = useState('');
 
-  const handleLogout = useCallback (() => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('token');
     navigate('/login');
-  }, [navigate])
+  }, [navigate]);
 
   const fetchExercises = useCallback(async () => {
     try {
-      const exercisesResponse = await apiClient.get('/exercises');
-      setExercises(exercisesResponse.data);
-      console.log('Exercises:', exercisesResponse.data);
+      const response = await apiClient.get('/exercises');
+      setExercises(response.data);
     } catch (err) {
-      console.error('Failed to fetch exercises:', err);
-      if (err.response && err.response.status === 401) handleLogout();
+      if (err.response?.status === 401) handleLogout();
     }
-  }, [handleLogout]); // Add handleLogout as a dependency
+  }, [handleLogout]);
 
   const fetchWorkouts = useCallback(async () => {
     try {
-      const workoutsResponse = await apiClient.get('/workouts');
-      setWorkouts(workoutsResponse.data);
-      console.log('Workouts:', workoutsResponse.data);
+      const response = await apiClient.get('/workouts');
+      setWorkouts(response.data);
     } catch (err) {
-      console.error('Failed to fetch workouts:', err);
-      if (err.response && err.response.status === 401) handleLogout();
+      if (err.response?.status === 401) handleLogout();
     }
-  }, [handleLogout])
+  }, [handleLogout]);
 
   useEffect(() => {
     fetchExercises();
     fetchWorkouts();
-  }, [fetchExercises, fetchWorkouts])
+  }, [fetchExercises, fetchWorkouts]);
 
   const handleCreateExercise = async (e) => {
-    e.preventDefault(); // Stop the form from refreshing
+    e.preventDefault();
     try {
-      // Call our API to create the new exercise
-      const response = await apiClient.post('/exercises', {
-        name: exerciseName,
-        category: exerciseCategory,
-      });
-      
-      console.log('Created exercise:', response.data)
-      
-      // Clear the form fields
+      await apiClient.post('/exercises', { name: exerciseName, category: exerciseCategory });
       setExerciseName('');
       setExerciseCategory('');
-      
-      // RE-FETCH the exercise list to update our UI
       fetchExercises(); 
-      
     } catch (err) {
-      console.error('Failed to create exercise:', err)
+      console.error(err);
     }
-  }
+  };
 
   const handleCreateWorkout = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     try {
-      const response = await apiClient.post('/workouts', {
-        name: workoutName,
-        date: workoutDate,
-      })
-      console.log('Created workout:', response.data)
-      setWorkoutName('')
-      setWorkoutDate('')
-      fetchWorkouts()
+      await apiClient.post('/workouts', { name: workoutName, date: workoutDate });
+      setWorkoutName('');
+      setWorkoutDate('');
+      fetchWorkouts(); 
     } catch (err) {
-      console.error('Failed to create workout:', err)
+      console.error(err);
     }
-  }
+  };
 
   const handleDeleteWorkout = async (id) => {
     if (!window.confirm('Delete this workout?')) return;
     try {
       await apiClient.delete(`/workouts/${id}`);
-      fetchWorkouts(); // Refresh list
-    } catch (err) {
-      console.error('Failed to delete workout', err);
-    }
+      fetchWorkouts();
+    } catch (err) { console.error(err); }
   };
 
   const handleDeleteExercise = async (id) => {
     if (!window.confirm('Delete this exercise?')) return;
     try {
       await apiClient.delete(`/exercises/${id}`);
-      fetchExercises(); // Refresh list
-    } catch (err) {
-      console.error('Failed to delete exercise', err);
-    }
-  }
+      fetchExercises();
+    } catch (err) { console.error(err); }
+  };
 
   return (
-    <div>
-      <h1>Welcome to Your Dashboard</h1>
-      <div style={{ marginBottom: '20px' }}>
-        <button onClick={() => navigate('/progress')}>
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* --- HEADER --- */}
+      <div className="max-w-4xl mx-auto flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Apex Dashboard</h1>
+        <button 
+          onClick={handleLogout}
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+        >
+          Log Out
+        </button>
+      </div>
+
+      {/* --- NAVIGATION CARDS --- */}
+      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <button 
+          onClick={() => navigate('/progress')}
+          className="bg-blue-600 text-white p-4 rounded-lg shadow hover:bg-blue-700 transition text-center font-bold"
+        >
           View Progress Analytics 📈
         </button>
-        <button onClick={() => navigate('/coach')} style={{ marginLeft: '10px' }}>
+        <button 
+          onClick={() => navigate('/coach')}
+          className="bg-purple-600 text-white p-4 rounded-lg shadow hover:bg-purple-700 transition text-center font-bold"
+        >
           AI Form Coach 🤖
         </button>
       </div>
-      <button onClick={handleLogout}>Log Out</button>
 
-      <hr />
-
-      <div>
-        <h2>Start a New Workout</h2>
-        <form onSubmit={handleCreateWorkout}>
-          <div>
-            <label>Workout Name:</label>
-            <input
-              type="text"
-              value={workoutName}
-              onChange={(e) => setWorkoutName(e.target.value)}
-              placeholder="e.g., Leg Day"
-              required
-            />
-          </div>
-          <div>
-            <label>Date (Optional):</label>
-            <input
-              type="date" 
-              value={workoutDate}
-              onChange={(e) => setWorkoutDate(e.target.value)}
-            />
-          </div>
-          <button type="submit">Start Workout</button>
-        </form>
-      </div>
-
-      <hr />
-
-      <div>
-        <h2>My Past Workouts</h2>
-        <ul>
-          {workouts.map((workout) => (
-            <li key={workout.workout_id}>
-              <Link to={`/workout/${workout.workout_id}`}>
-                {workout.name} - {new Date(workout.workout_date).toLocaleDateString()}
-              </Link>  
-              <button 
-                onClick={() => handleDeleteWorkout(workout.workout_id)}
-                style={{ marginLeft: '10px', color: 'red' }}
-              >
-                Delete
+      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        {/* --- LEFT COLUMN: FORMS --- */}
+        <div className="space-y-8">
+          
+          {/* Create Workout Card */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-bold mb-4 text-gray-700">Start New Workout</h2>
+            <form onSubmit={handleCreateWorkout} className="space-y-4">
+              <input
+                type="text"
+                value={workoutName}
+                onChange={(e) => setWorkoutName(e.target.value)}
+                placeholder="Workout Name (e.g., Leg Day)"
+                className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                required
+              />
+              <input
+                type="date" 
+                value={workoutDate}
+                onChange={(e) => setWorkoutDate(e.target.value)}
+                className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <button type="submit" className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 font-bold">
+                Start Workout
               </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <hr />
-
-      <div>
-        <h2>Create a New Exercise</h2>
-        <form onSubmit={handleCreateExercise}>
-          <div>
-            <label>Exercise Name:</label>
-            <input
-              type="text"
-              value={exerciseName}
-              onChange={(e) => setExerciseName(e.target.value)}
-              required
-            />
+            </form>
           </div>
-          <div>
-            <label>Category:</label>
-            <input
-              type="text"
-              value={exerciseCategory}
-              onChange={(e) => setExerciseCategory(e.target.value)}
-              required
-          />
-          </div>
-          <button type="submit">Create Exercise</button>
-        </form>
-      </div>
 
-      <hr />
-
-      <div>
-        <h2>My Exercises</h2>
-        <ul>
-          {exercises.map((exercise) => (
-            <li key={exercise.exercise_id}>
-              {exercise.name} ({exercise.category})
-              <button 
-                onClick={() => handleDeleteExercise(exercise.exercise_id)}
-                style={{ marginLeft: '10px', color: 'red' }}
-              >
-                Delete
+          {/* Create Exercise Card */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-bold mb-4 text-gray-700">Add New Exercise</h2>
+            <form onSubmit={handleCreateExercise} className="space-y-4">
+              <input
+                type="text"
+                value={exerciseName}
+                onChange={(e) => setExerciseName(e.target.value)}
+                placeholder="Exercise Name"
+                className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                required
+              />
+              <input
+                type="text"
+                value={exerciseCategory}
+                onChange={(e) => setExerciseCategory(e.target.value)}
+                placeholder="Category (e.g., Chest)"
+                className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                required
+              />
+              <button type="submit" className="w-full bg-gray-800 text-white py-2 rounded hover:bg-gray-900 font-bold">
+                Add Exercise
               </button>
-            </li>
-          ))}
-        </ul>
+            </form>
+          </div>
+        </div>
+
+        {/* --- RIGHT COLUMN: LISTS --- */}
+        <div>
+          {/* Past Workouts List */}
+          <div className="bg-white p-6 rounded-lg shadow mb-8">
+            <h2 className="text-xl font-bold mb-4 text-gray-700">History</h2>
+            {workouts.length === 0 ? (
+              <p className="text-gray-500">No workouts yet.</p>
+            ) : (
+              <ul className="space-y-3">
+                {workouts.map((workout) => (
+                  <li key={workout.workout_id} className="flex justify-between items-center bg-gray-50 p-3 rounded border">
+                    <Link 
+                      to={`/workout/${workout.workout_id}`}
+                      className="text-blue-600 font-semibold hover:underline"
+                    >
+                      {workout.name} <span className="text-gray-500 text-sm">({new Date(workout.workout_date).toLocaleDateString()})</span>
+                    </Link>
+                    <button 
+                      onClick={() => handleDeleteWorkout(workout.workout_id)}
+                      className="text-red-500 hover:text-red-700 text-sm font-bold"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Exercise List */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-bold mb-4 text-gray-700">Exercise Database</h2>
+            <ul className="space-y-2 max-h-60 overflow-y-auto">
+              {exercises.map((exercise) => (
+                <li key={exercise.exercise_id} className="flex justify-between text-gray-700 border-b pb-1 last:border-0">
+                  <span>{exercise.name} <span className="text-xs text-gray-400">({exercise.category})</span></span>
+                  <button 
+                    onClick={() => handleDeleteExercise(exercise.exercise_id)}
+                    className="text-red-400 hover:text-red-600 text-xs"
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
       </div>
     </div>
-  )
+  );
 }
 
 export default Dashboard;

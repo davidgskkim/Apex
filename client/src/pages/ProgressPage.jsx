@@ -11,18 +11,17 @@ import {
   Legend,
 } from 'chart.js';
 import apiClient from '../api';
+import { useNavigate } from 'react-router-dom';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 function ProgressPage() {
+  const navigate = useNavigate();
   const [exercises, setExercises] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState('');
   const [chartData, setChartData] = useState(null);
 
-  // 1. Helper Function: Calculate Epley 1RM
-  const calculateE1RM = (weight, reps) => {
-    return weight * (1 + reps / 30);
-  };
+  const calculateE1RM = (weight, reps) => weight * (1 + reps / 30);
 
   useEffect(() => {
     const fetchExercises = async () => {
@@ -30,16 +29,13 @@ function ProgressPage() {
         const response = await apiClient.get('/exercises');
         setExercises(response.data);
         if (response.data.length > 0) setSelectedExercise(response.data[0].exercise_id);
-      } catch (err) {
-        console.error('Failed to fetch exercises', err);
-      }
+      } catch (err) { console.error(err); }
     };
     fetchExercises();
   }, []);
 
   useEffect(() => {
     if (!selectedExercise) return;
-
     const fetchProgress = async () => {
       try {
         const response = await apiClient.get(`/progress/${selectedExercise}`);
@@ -50,45 +46,25 @@ function ProgressPage() {
           return;
         }
 
-        // --- DATA PROCESSING ---
-
-        // 2. Group data by Date to find the "Best Set" of each day
         const bestSetsByDate = {};
-
         rawHistory.forEach(log => {
-          // Convert date to standard string (YYYY-MM-DD)
           const dateStr = new Date(log.workout_date).toLocaleDateString();
           const e1rm = calculateE1RM(parseFloat(log.weight_kg), log.reps);
-
-          // If this is the first log for this date, OR if this log is better than the stored one
           if (!bestSetsByDate[dateStr] || e1rm > bestSetsByDate[dateStr].e1rm) {
-            bestSetsByDate[dateStr] = {
-              date: dateStr,
-              e1rm: e1rm,
-              actualWeight: log.weight_kg,
-              reps: log.reps
-            };
+            bestSetsByDate[dateStr] = { date: dateStr, e1rm: e1rm };
           }
         });
 
-        // Convert the object back to an array and sort by date
-        const processedHistory = Object.values(bestSetsByDate).sort((a, b) => 
-          new Date(a.date) - new Date(b.date)
-        );
-
-        // 3. Prepare Chart Data
+        const processedHistory = Object.values(bestSetsByDate).sort((a, b) => new Date(a.date) - new Date(b.date));
         const labels = processedHistory.map(item => item.date);
         const dataPoints = processedHistory.map(item => item.e1rm);
 
-        // Ideal Trend Calculation (Based on the FIRST day's E1RM)
         const startScore = dataPoints[0];
         const startDate = new Date(processedHistory[0].date);
-
         const idealData = processedHistory.map(item => {
           const currentDate = new Date(item.date);
           const diffTime = Math.abs(currentDate - startDate);
           const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7)); 
-          // 2.5% increase on the SCORE per week
           return startScore * (1 + 0.025 * diffWeeks);
         });
 
@@ -112,49 +88,51 @@ function ProgressPage() {
             },
           ],
         });
-
-      } catch (err) {
-        console.error('Failed to fetch progress', err);
-      }
+      } catch (err) { console.error(err); }
     };
-
     fetchProgress();
   }, [selectedExercise]);
 
   return (
-    <div>
-      <h1>Progress Dashboard</h1>
-      <div style={{ marginBottom: '20px' }}>
-        <label>Select Exercise: </label>
-        <select value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)}>
-          {exercises.map(ex => (
-            <option key={ex.exercise_id} value={ex.exercise_id}>{ex.name}</option>
-          ))}
-        </select>
-      </div>
-      <div style={{ height: '400px', width: '100%' }}>
-        {chartData ? (
-          <Line 
-            data={chartData} 
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                title: { display: true, text: 'Calculated Strength Score (Weight × Reps)' },
-                tooltip: {
-                  callbacks: {
-                    // Custom tooltip to show the ACTUAL weight/reps
-                    afterLabel: function(context) {
-                       // We can't easily access original weight/reps here without
-                       // passing it into the dataset, but for now, the score is fine.
-                       return "Higher is better!";
-                    }
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-4xl mx-auto">
+        <button onClick={() => navigate('/')} className="text-gray-600 hover:text-gray-900 mb-6 font-medium">
+          ← Back to Dashboard
+        </button>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Progress Analytics</h1>
+            <select 
+              value={selectedExercise} 
+              onChange={(e) => setSelectedExercise(e.target.value)}
+              className="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+            >
+              {exercises.map(ex => (
+                <option key={ex.exercise_id} value={ex.exercise_id}>{ex.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="h-96 w-full">
+            {chartData ? (
+              <Line 
+                data={chartData} 
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    title: { display: true, text: 'Calculated Strength Score (Weight × Reps)' }
                   }
-                }
-              }
-            }} 
-          />
-        ) : <p>No data found.</p>}
+                }} 
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-400">
+                No data found for this exercise. Go log some workouts!
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

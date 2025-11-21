@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import WorkoutPage from './pages/WorkoutPage';
 import ProgressPage from './pages/ProgressPage'
 import CoachPage from './pages/CoachPage'
+import OnboardingPage from './pages/OnboardingPage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/workout/:id" element={<WorkoutPage />} />
         <Route path="/progress" element={<ProgressPage />} />
         <Route path="/coach" element={<CoachPage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
       </Route>
       
     </Routes>

@@ -20,7 +20,7 @@ function Signup() {
       const response = await apiClient.post('/auth/signup', { email, username, password });
       console.log('Signup successful! Token:', response.data.token);
       localStorage.setItem('token', response.data.token);
-      navigate('/');
+      navigate('/onboarding');
     } catch (err) {
       console.error('Signup failed:', err);
       // 2. Capture the error message safely

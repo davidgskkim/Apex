@@ -103,13 +103,18 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/exercises', async (req, res) => {
   try {
+    const token = req.headers.authorization.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Authorization denied' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.user.id;
+
     const exercises = await sql`
       SELECT * FROM exercises
+      WHERE user_id = ${userId}
       ORDER BY name
     `;
     
     res.json(exercises);
-    
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server error' });
@@ -118,20 +123,20 @@ app.get('/api/exercises', async (req, res) => {
 
 app.post('/api/exercises', async (req, res) => {
   try {
-    const { name, category } = req.body;
+    const token = req.headers.authorization.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Authorization denied' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.user.id;
 
-    if (!name || !category) {
-      return res.status(400).json({ error: 'Name and category are required' });
-    }
+    const { name, category } = req.body;
+    if (!name || !category) return res.status(400).json({ error: 'Fields required' });
 
     const newExercise = await sql`
-      INSERT INTO exercises (name, category)
-      VALUES (${name}, ${category})
+      INSERT INTO exercises (name, category, user_id)
+      VALUES (${name}, ${category}, ${userId})
       RETURNING *
     `;
-    
     res.status(201).json(newExercise[0]);
-
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server error' });
@@ -317,6 +322,50 @@ app.post('/api/coach', async (req, res) => {
   }
 });
 
+// --- AI ONBOARDING ROUTE ---
+app.post('/api/generate-plan', async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Authorization denied' });
+    jwt.verify(token, process.env.JWT_SECRET);
+
+    const { goal, experience, days } = req.body;
+
+    // 1. Construct the prompt
+    const prompt = `
+      Create a workout split for a ${experience} lifter who wants to focus on ${goal} and can train ${days} days per week.
+      
+      Return ONLY a JSON object with this exact structure, no other text:
+      {
+        "splitName": "Name of split (e.g. Upper/Lower)",
+        "description": "One sentence explaining why this is good.",
+        "workouts": ["Name of Workout 1", "Name of Workout 2", "Name of Workout 3"]
+      }
+    `;
+
+    // 2. Call OpenAI
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a fitness program architect. You output only valid JSON." },
+        { role: "user", content: prompt }
+      ],
+    });
+
+    // 3. Parse the text response into a real JSON object
+    const rawText = completion.choices[0].message.content;
+    // Cleanup: Sometimes GPT adds ```json ... ``` markdown, we remove it
+    const jsonString = rawText.replace(/```json|```/g, '').trim();
+    const plan = JSON.parse(jsonString);
+
+    res.json(plan);
+
+  } catch (err) {
+    console.error('AI Plan Error:', err);
+    res.status(500).json({ error: 'Failed to generate plan' });
+  }
+});
+
 // --- DELETE LOG ROUTE ---
 app.delete('/api/logs/:id', async (req, res) => {
   try {
@@ -361,11 +410,14 @@ app.delete('/api/workouts/:id', async (req, res) => {
 app.delete('/api/exercises/:id', async (req, res) => {
   try {
     const token = req.headers.authorization.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Authorization denied' });
-    jwt.verify(token, process.env.JWT_SECRET);
-    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.user.id;
     const { id } = req.params;
-    await sql`DELETE FROM exercises WHERE exercise_id = ${id}`;
+    
+    await sql`
+      DELETE FROM exercises 
+      WHERE exercise_id = ${id} AND user_id = ${userId}
+    `;
     res.json({ message: 'Exercise deleted' });
   } catch (err) {
     console.error(err.message);

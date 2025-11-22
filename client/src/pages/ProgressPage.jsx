@@ -9,13 +9,13 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler // Import Filler for area effects if needed
 } from 'chart.js';
 import apiClient from '../api';
 import { useNavigate } from 'react-router-dom';
-// Import the new descriptions
 import { STRENGTH_STANDARDS, RANK_DESCRIPTIONS, getRank } from '../data/strengthStandards';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 function ProgressPage() {
   const navigate = useNavigate();
@@ -23,10 +23,8 @@ function ProgressPage() {
   const [selectedExercise, setSelectedExercise] = useState('');
   const [chartData, setChartData] = useState(null);
   const [timeRange, setTimeRange] = useState(7);
-  
-  // State for Rank & Modal
   const [rank, setRank] = useState(null);
-  const [showRankModal, setShowRankModal] = useState(false); // <--- Modal State
+  const [showRankModal, setShowRankModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const calculateE1RM = (weight, reps) => weight * (1 + reps / 30);
@@ -42,16 +40,27 @@ function ProgressPage() {
     return dates;
   };
 
-  // Helper to get color based on rank
   const getRankColor = (r) => {
     switch(r) {
-      case 'Apex': return 'text-purple-600';
-      case 'Diamond': return 'text-blue-500';
-      case 'Platinum': return 'text-cyan-500';
-      case 'Gold': return 'text-yellow-500';
-      case 'Silver': return 'text-gray-400';
-      case 'Bronze': return 'text-orange-700';
+      case 'Apex': return 'text-purple-400';
+      case 'Diamond': return 'text-cyan-400';
+      case 'Platinum': return 'text-emerald-400';
+      case 'Gold': return 'text-yellow-400';
+      case 'Silver': return 'text-gray-300';
+      case 'Bronze': return 'text-orange-400';
       default: return 'text-gray-500';
+    }
+  };
+
+  const getBorderColor = (r) => {
+    switch(r) {
+      case 'Apex': return 'border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]';
+      case 'Diamond': return 'border-cyan-500';
+      case 'Platinum': return 'border-emerald-500';
+      case 'Gold': return 'border-yellow-500';
+      case 'Silver': return 'border-slate-400';
+      case 'Bronze': return 'border-orange-600';
+      default: return 'border-gray-700';
     }
   };
 
@@ -68,10 +77,9 @@ function ProgressPage() {
 
   useEffect(() => {
     if (!selectedExercise) return;
-    
     const fetchProgress = async () => {
-      setIsLoading(true); // <--- START LOADING
-      setChartData(null); // Reset chart while loading
+      setIsLoading(true);
+      setChartData(null);
       try {
         const response = await apiClient.get(`/progress/${selectedExercise}`);
         const rawHistory = response.data;
@@ -83,13 +91,11 @@ function ProgressPage() {
           return;
         }
 
-        // Rank Logic
         const maxWeightEver = Math.max(...rawHistory.map(log => parseFloat(log.weight_kg)));
         const currentExerciseName = exercises.find(e => e.exercise_id == selectedExercise)?.name;
         const currentRank = getRank(currentExerciseName, maxWeightEver);
         setRank(currentRank);
 
-        // Chart Logic
         const labels = generateDateLabels(timeRange);
         const dataPoints = new Array(timeRange).fill(null);
         const today = new Date();
@@ -110,7 +116,6 @@ function ProgressPage() {
           }
         });
 
-        // Ideal Trend Logic
         const firstValidIndex = dataPoints.findIndex(val => val !== null);
         let idealData = [];
         if (firstValidIndex !== -1) {
@@ -128,155 +133,182 @@ function ProgressPage() {
             {
               label: 'Strength Score',
               data: dataPoints,
-              borderColor: 'rgb(75, 192, 192)',
-              backgroundColor: 'rgba(75, 192, 192, 0.5)',
+              borderColor: '#2dd4bf', // Teal-400 (Pops on dark)
+              backgroundColor: 'rgba(45, 212, 191, 0.1)',
               tension: 0.1,
               spanGaps: true,
               pointRadius: 5,
-              pointHoverRadius: 8
+              pointHoverRadius: 8,
+              pointBackgroundColor: '#2dd4bf'
             },
             {
               label: 'Ideal Trend',
               data: idealData,
-              borderColor: 'rgb(255, 99, 132)',
-              backgroundColor: 'rgba(255, 99, 132, 0.5)',
+              borderColor: '#f472b6', // Pink-400
+              backgroundColor: 'rgba(244, 114, 182, 0.1)',
               borderDash: [5, 5],
               pointRadius: 0,
               spanGaps: true
             },
           ],
         });
-
-      } catch (err) { 
-        console.error(err); 
-      } finally {
-        setIsLoading(false); // <--- STOP LOADING (Done)
-      }
+      } catch (err) { console.error(err); } finally { setIsLoading(false); }
     };
     fetchProgress();
   }, [selectedExercise, timeRange]);
 
+  // Ordered ranks for the staircase visual
+  const RANK_ORDER = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Apex"];
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        <button onClick={() => navigate('/')} className="text-gray-600 hover:text-gray-900 mb-6 font-medium">
+    <div className="min-h-screen bg-slate-950 p-6">
+      <div className="max-w-5xl mx-auto">
+        <button onClick={() => navigate('/')} className="text-slate-400 hover:text-white mb-6 font-medium transition">
           ← Back to Dashboard
         </button>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        {/* Main Card: Dark Mode */}
+        <div className="bg-slate-900 p-6 rounded-xl shadow-xl border border-slate-800">
+          
           {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Progress Analytics</h1>
-              <div className="flex items-center gap-3 mt-1">
-                {rank && (
-                  <span className="text-sm font-medium text-gray-500">
+              <h1 className="text-2xl font-bold text-white">Progress Analytics</h1>
+              {rank && (
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-sm font-medium text-slate-400">
                     Current Rank: <span className={`font-bold text-lg ${getRankColor(rank)}`}>{rank}</span>
                   </span>
-                )}
-                {/* --- THE NEW BUTTON --- */}
-                <button 
-                  onClick={() => setShowRankModal(true)}
-                  className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded border"
-                >
-                  ℹ️ View Distribution
-                </button>
-              </div>
+                  <button onClick={() => setShowRankModal(true)} className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700 transition">
+                    ℹ️ Info
+                  </button>
+                </div>
+              )}
             </div>
             
             <div className="flex gap-4">
-               <select value={timeRange} onChange={(e) => setTimeRange(parseInt(e.target.value))} className="border p-2 rounded bg-white text-sm">
+               <select value={timeRange} onChange={(e) => setTimeRange(parseInt(e.target.value))} className="bg-slate-800 border border-slate-700 text-white p-2 rounded focus:ring-2 focus:ring-violet-500 outline-none text-sm">
                 <option value={7}>Last 7 Days</option>
                 <option value={30}>Last 30 Days</option>
                 <option value={90}>Last 3 Months</option>
                </select>
-               <select value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)} className="border p-2 rounded bg-white font-bold">
+               <select value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)} className="bg-slate-800 border border-slate-700 text-white p-2 rounded focus:ring-2 focus:ring-violet-500 outline-none font-bold">
                 {exercises.map(ex => (<option key={ex.exercise_id} value={ex.exercise_id}>{ex.name}</option>))}
                </select>
             </div>
           </div>
 
-          {/* Chart */}
-          <div className="h-96 w-full mb-8 flex items-center justify-center">
+          {/* Chart Section (Dark Mode Options) */}
+          <div className="h-96 w-full mb-12 flex items-center justify-center">
             {isLoading ? (
-              // State 1: Loading
-              <div className="text-gray-500 animate-pulse">Loading chart data...</div>
+              <div className="text-slate-500 animate-pulse">Loading chart data...</div>
             ) : chartData ? (
-              // State 2: Chart exists
               <Line 
                 data={chartData} 
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
-                  scales: { y: { title: { display: true, text: 'Strength Score' } } },
+                  scales: {
+                    y: {
+                      title: { display: true, text: 'Strength Score', color: '#94a3b8' },
+                      grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                      ticks: { color: '#cbd5e1' }
+                    },
+                    x: {
+                      grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                      ticks: { color: '#cbd5e1' }
+                    }
+                  },
                   plugins: {
-                    tooltip: { callbacks: { label: (c) => c.parsed.y ? `Score: ${c.parsed.y.toFixed(1)}` : '' } }
+                    legend: { labels: { color: '#cbd5e1' } },
+                    title: { color: '#fff' },
+                    tooltip: { 
+                      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                      titleColor: '#fff',
+                      bodyColor: '#cbd5e1',
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                      borderWidth: 1,
+                      callbacks: { label: (c) => c.parsed.y ? `Score: ${c.parsed.y.toFixed(1)}` : '' } 
+                    }
                   }
                 }} 
               />
             ) : (
-              // State 3: No Data (The fix you wanted)
               <div className="text-center">
-                <p className="text-gray-500 mb-2">No logs found for this exercise yet.</p>
-                <button 
-                  onClick={() => navigate('/')}
-                  className="text-blue-600 hover:underline font-medium"
-                >
-                  Go log a workout to see your progress! →
-                </button>
+                <p className="text-slate-500 mb-4">No logs found for this exercise yet.</p>
+                <button onClick={() => navigate('/')} className="text-violet-400 hover:underline font-medium">Go log a workout! →</button>
               </div>
             )}
           </div>
+          
+          {/* THE "TEXT STAIRCASE" LEGEND */}
+          <div className="mt-12 pt-6 border-t border-slate-800">
+            <h3 className="font-bold text-slate-400 mb-8 text-sm uppercase tracking-wide text-center">🏆 Rank Standards (Est. 1RM)</h3>
+            
+            {exercises.find(e => e.exercise_id == selectedExercise)?.name && STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise).name] ? (
+              
+              // Container aligns everything to the BOTTOM
+              <div className="flex items-end justify-between gap-2 h-48 px-2">
+                {RANK_ORDER.map((rankName, index) => {
+                  const weight = STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise).name][rankName];
+                  // Calculate height: Bronze is 20%, climbs to 100%
+                  const heightPercent = 20 + (index * 16); 
+                  
+                  return (
+                    <div 
+                      key={rankName} 
+                      // This div IS the step. It grows in height.
+                      className={`w-full rounded-t-xl border-t-4 bg-gradient-to-b from-slate-800 to-transparent flex flex-col items-center justify-start pt-3 transition-all duration-300 hover:bg-slate-800/80 group ${getBorderColor(rankName)}`}
+                      style={{ height: `${heightPercent}%` }}
+                    >
+                      {/* Rank Name (At the top of the step) */}
+                      <span className={`text-[10px] md:text-xs font-black uppercase tracking-wider mb-1 ${getRankColor(rankName)} group-hover:scale-110 transition-transform`}>
+                        {rankName}
+                      </span>
+                      
+                      {/* Weight (Just below name) */}
+                      <span className="text-xs font-mono text-white font-bold">
+                        {weight}<span className="text-[10px] text-slate-500 ml-0.5">kg</span>
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+
+            ) : (
+              <p className="text-slate-500 italic text-sm text-center">No official ranked standards for this exercise yet.</p>
+            )}
+          </div>
+
         </div>
       </div>
 
-      {/* --- RANK DISTRIBUTION MODAL --- */}
+      {/* Dark Mode Modal */}
       {showRankModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
-            <button 
-              onClick={() => setShowRankModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-            >
-              ✕
-            </button>
-            
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Rank Distribution</h2>
-            <p className="text-sm text-gray-500 mb-4">
-              Standards for <strong>{exercises.find(e => e.exercise_id == selectedExercise)?.name}</strong> (1 Rep Max)
-            </p>
-
-            {/* Render the Table for this Exercise */}
-            {STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise)?.name] ? (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-slate-900 rounded-xl shadow-2xl max-w-md w-full p-6 relative border border-slate-700">
+            <button onClick={() => setShowRankModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition">✕</button>
+            <h2 className="text-xl font-bold text-white mb-4">Rank Distribution</h2>
+            <p className="text-sm text-slate-400 mb-4">Standards for <strong>{exercises.find(e => e.exercise_id == selectedExercise)?.name}</strong> (1 Rep Max)</p>
+            {STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise)?.name] && (
               <div className="space-y-3">
-                {Object.entries(STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise).name])
-                  .reverse() // Show Apex at top
-                  .map(([rankName, weight]) => (
-                  <div key={rankName} className="flex justify-between items-center border-b pb-2 last:border-0">
+                {Object.entries(STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise).name]).reverse().map(([rankName, weight]) => (
+                  <div key={rankName} className="flex justify-between items-center border-b border-slate-800 pb-2 last:border-0">
                     <div className="flex flex-col">
                       <span className={`font-bold ${getRankColor(rankName)}`}>{rankName}</span>
-                      <span className="text-xs text-gray-400">{RANK_DESCRIPTIONS[rankName]}</span>
+                      <span className="text-xs text-slate-500">{RANK_DESCRIPTIONS[rankName]}</span>
                     </div>
-                    <span className="font-mono font-bold text-gray-700">{weight} kg</span>
+                    <span className="font-mono font-bold text-slate-300">{weight} kg</span>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-gray-500 italic">No official ranked standards for this exercise yet.</p>
             )}
-            
             <div className="mt-6 text-center">
-              <button 
-                onClick={() => setShowRankModal(false)}
-                className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 font-medium w-full"
-              >
-                Close
-              </button>
+              <button onClick={() => setShowRankModal(false)} className="bg-slate-800 text-white px-4 py-2 rounded hover:bg-slate-700 font-medium w-full transition">Close</button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

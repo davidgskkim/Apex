@@ -1,119 +1,86 @@
-🏔️ Apex - AI-Powered Strength Tracker
+# 🏔️ Apex - AI-Powered Strength Tracker
 
 Apex is a full-stack fitness application designed to help lifters track progressive overload and optimize their training. It features a custom-built workout logger, advanced analytics with trend visualization, and an AI-powered strength coach.
 
-Live Demo: https://apex-david-kim.vercel.app
+**Live Demo:** [https://apex-david-kim.vercel.app](https://apex-david-kim.vercel.app)
 
-✨ Key Features
+![Apex Dashboard Screenshot](https://via.placeholder.com/800x450?text=Add+Your+Screenshot+Here)
 
-🏋️‍♂️ Intelligent Logging: Create custom workouts and log sets, reps, and weight with a streamlined UI.
+## ✨ Key Features
 
-📈 Progressive Overload Analytics: Visualizes strength progress over time using Estimated 1-Rep Max (E1RM) calculations. Includes an "Ideal Trend" line to benchmark progress against a 2.5% weekly growth target.
+* **🏋️‍♂️ Intelligent Logging:** Create custom workouts and log sets, reps, and weight with a streamlined UI.
+* **📈 Progressive Overload Analytics:** Visualizes strength progress over time using Estimated 1-Rep Max (E1RM) calculations. Includes an "Ideal Trend" line to benchmark progress against a 2.5% weekly growth target.
+* **🤖 AI Form Coach:** Integrated OpenAI GPT-4o to provide instant, context-aware advice on form, injury prevention, and programming.
+* **🏆 Gamified Ranking System:** Automatically calculates a user's strength tier (Bronze to Apex) based on real-world strength standards.
+* **🔐 Secure Authentication:** Custom JWT-based auth system with bcrypt password hashing.
+* **🚀 Smart Onboarding:** AI-generated workout splits based on user goals and experience level.
 
-🤖 AI Form Coach: Integrated OpenAI GPT-4o to provide instant, context-aware advice on form, injury prevention, and programming.
+## 🛠️ Tech Stack
 
-🏆 Gamified Ranking System: Automatically calculates a user's strength tier (Bronze to Apex) based on real-world strength standards.
+**Frontend:**
+* React (Vite)
+* Tailwind CSS (Dark Mode UI)
+* Chart.js (Data Visualization)
+* React Router (Navigation)
 
-🔐 Secure Authentication: Custom JWT-based auth system with bcrypt password hashing.
+**Backend:**
+* Node.js & Express
+* PostgreSQL (Supabase)
+* OpenAI API (AI Features)
+* JSON Web Tokens (Auth)
 
-🚀 Smart Onboarding: AI-generated workout splits based on user goals and experience level.
+**Deployment:**
+* Frontend: Vercel
+* Backend: Render
 
-🛠️ Tech Stack
+## 🚀 Getting Started
 
-Frontend:
+### Prerequisites
+* Node.js (v18+)
+* PostgreSQL Database (Supabase recommended)
+* OpenAI API Key
 
-React (Vite)
+### Installation
 
-Tailwind CSS (Dark Mode UI)
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/yourusername/apex.git](https://github.com/yourusername/apex.git)
+    cd apex
+    ```
 
-Chart.js (Data Visualization)
+2.  **Install Backend Dependencies:**
+    ```bash
+    cd server
+    npm install
+    ```
 
-React Router (Navigation)
+3.  **Install Frontend Dependencies:**
+    ```bash
+    cd ../client
+    npm install
+    ```
 
-Backend:
+4.  **Environment Setup:**
+    Create a `.env` file in the `/server` directory:
+    ```env
+    DATABASE_URL=your_postgres_connection_string
+    JWT_SECRET=your_secret_key
+    OPENAI_API_KEY=your_openai_key
+    PORT=5000
+    ```
 
-Node.js & Express
+5.  **Run Locally:**
+    * **Backend:** `cd server && npm run dev`
+    * **Frontend:** `cd client && npm run dev`
 
-PostgreSQL (Supabase)
+## 📸 Screenshots
 
-OpenAI API (AI Features)
+| Dashboard | Analytics |
+|:---:|:---:|
+| ![Dashboard](https://via.placeholder.com/400x300?text=Dashboard) | ![Analytics](https://via.placeholder.com/400x300?text=Analytics) |
 
-JSON Web Tokens (Auth)
+## 👤 Author
 
-Deployment:
-
-Frontend: Vercel
-
-Backend: Render
-
-🚀 Getting Started
-
-Prerequisites
-
-Node.js (v18+)
-
-PostgreSQL Database (Supabase recommended)
-
-OpenAI API Key
-
-Installation
-
-Clone the repository:
-
-git clone [https://github.com/yourusername/apex.git](https://github.com/yourusername/apex.git)
-cd apex
-
-
-Install Backend Dependencies:
-
-cd server
-npm install
-
-
-Install Frontend Dependencies:
-
-cd ../client
-npm install
-
-
-Environment Setup:
-Create a .env file in the /server directory:
-
-DATABASE_URL=your_postgres_connection_string
-JWT_SECRET=your_secret_key
-OPENAI_API_KEY=your_openai_key
-PORT=5000
-
-
-Run Locally:
-
-Backend: cd server && npm run dev
-
-Frontend: cd client && npm run dev
-
-📸 Screenshots
-
-Dashboard
-
-Analytics
-
-
-
-
-
-👤 Author
-
-David Kim
-
-LinkedIn
-
-GitHub
-
-
-**Final Steps:**
-1.  Create a `README.md` in your root folder.
-2.  Paste this content.
-3.  Update the links and image placeholders with your actual details.
-4.  Commit and push!
-
-You have built an incredible project. Good luck with your interviews!
+**David Kim**
+* [LinkedIn](https://www.linkedin.com/in/david-gs-kim)
+* [GitHub](https://github.com/davidgskkim)

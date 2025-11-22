@@ -4,8 +4,6 @@ Apex is a full-stack fitness application designed to help lifters track progress
 
 **Live Demo:** [https://apex-david-kim.vercel.app](https://apex-david-kim.vercel.app)
 
-![Apex Dashboard Screenshot](https://via.placeholder.com/800x450?text=Add+Your+Screenshot+Here)
-
 ## ✨ Key Features
 
 * **🏋️‍♂️ Intelligent Logging:** Create custom workouts and log sets, reps, and weight with a streamlined UI.
@@ -77,7 +75,7 @@ Apex is a full-stack fitness application designed to help lifters track progress
 
 | Dashboard | Analytics |
 |:---:|:---:|
-| ![Dashboard](https://via.placeholder.com/400x300?text=Dashboard) | ![Analytics](https://via.placeholder.com/400x300?text=Analytics) |
+| ![Dashboard](./assets/dashboard.png) | ![Analytics](./assets/analytics.png) |
 
 ## 👤 Author
 

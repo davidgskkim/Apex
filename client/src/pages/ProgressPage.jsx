@@ -9,7 +9,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler // Import Filler for area effects if needed
+  Filler 
 } from 'chart.js';
 import apiClient from '../api';
 import { useNavigate } from 'react-router-dom';
@@ -133,7 +133,7 @@ function ProgressPage() {
             {
               label: 'Strength Score',
               data: dataPoints,
-              borderColor: '#2dd4bf', // Teal-400 (Pops on dark)
+              borderColor: '#2dd4bf', 
               backgroundColor: 'rgba(45, 212, 191, 0.1)',
               tension: 0.1,
               spanGaps: true,
@@ -144,7 +144,7 @@ function ProgressPage() {
             {
               label: 'Ideal Trend',
               data: idealData,
-              borderColor: '#f472b6', // Pink-400
+              borderColor: '#f472b6', 
               backgroundColor: 'rgba(244, 114, 182, 0.1)',
               borderDash: [5, 5],
               pointRadius: 0,
@@ -157,7 +157,6 @@ function ProgressPage() {
     fetchProgress();
   }, [selectedExercise, timeRange]);
 
-  // Ordered ranks for the staircase visual
   const RANK_ORDER = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Apex"];
 
   return (
@@ -241,23 +240,19 @@ function ProgressPage() {
             )}
           </div>
           
-          {/* THE "TEXT STAIRCASE" LEGEND */}
           <div className="mt-12 pt-6 border-t border-slate-800">
             <h3 className="font-bold text-slate-400 mb-8 text-sm uppercase tracking-wide text-center">🏆 Rank Standards (Est. 1RM)</h3>
             
             {exercises.find(e => e.exercise_id == selectedExercise)?.name && STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise).name] ? (
               
-              // Container aligns everything to the BOTTOM
               <div className="flex items-end justify-between gap-2 h-48 px-2">
                 {RANK_ORDER.map((rankName, index) => {
                   const weight = STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise).name][rankName];
-                  // Calculate height: Bronze is 20%, climbs to 100%
                   const heightPercent = 20 + (index * 16); 
                   
                   return (
                     <div 
                       key={rankName} 
-                      // This div IS the step. It grows in height.
                       className={`w-full rounded-t-xl border-t-4 bg-gradient-to-b from-slate-800 to-transparent flex flex-col items-center justify-start pt-3 transition-all duration-300 hover:bg-slate-800/80 group ${getBorderColor(rankName)}`}
                       style={{ height: `${heightPercent}%` }}
                     >

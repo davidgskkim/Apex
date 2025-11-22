@@ -12,7 +12,6 @@ import Header from './components/Header';
 function App() {
   return (
     <>
-      {/* The Header sits here, outside the routes, so it's always visible */}
       <Header />
       
       <Routes>

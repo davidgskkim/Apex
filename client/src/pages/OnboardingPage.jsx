@@ -33,7 +33,7 @@ function OnboardingPage() {
       const promises = generatedPlan.workouts.map((workoutName, index) => {
         const workoutDate = new Date();
         workoutDate.setDate(today.getDate() + index);
-        workoutDate.setHours(12, 0, 0, 0); // Timezone Fix
+        workoutDate.setHours(12, 0, 0, 0);  
         const dateString = workoutDate.toISOString();
 
         return apiClient.post('/workouts', { 

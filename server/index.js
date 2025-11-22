@@ -19,7 +19,7 @@ app.post('/api/auth/signup', async (req, res) => {
   try {
     const { email, username, password } = req.body;
 
-    // 1. Check if user already exists (Manual Check)
+    // Check if user already exists 
     const existingUser = await sql`
       SELECT * FROM users WHERE email = ${email} OR username = ${username}
     `;
@@ -28,18 +28,18 @@ app.post('/api/auth/signup', async (req, res) => {
       return res.status(400).json({ error: 'Email or Username already taken' });
     }
 
-    // 2. Hash password
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // 3. Create user
+    // Create user
     const newUser = await sql`
       INSERT INTO users (email, username, password_hash)
       VALUES (${email}, ${username}, ${passwordHash})
       RETURNING *
     `;
 
-    // 4. Create Token
+    // Create Token
     const payload = { user: { id: newUser[0].user_id } };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
@@ -56,21 +56,20 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Find the user
+    // Find the user
     const users = await sql`
       SELECT * FROM users
       WHERE email = ${email}
     `;
 
-    // 2. SAFETY CHECK (This is what was missing/failing)
-    // We verify that we actually got a user back before checking the password
+    // Safeguard: Check if user exists
     if (users.length === 0) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    const user = users[0]; // Get the first user
+    const user = users[0]; 
 
-    // 3. Compare passwords
+    // Compare passwords
     const isPasswordValid = await bcrypt.compare(
       password,
       user.password_hash
@@ -80,7 +79,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    // 4. Create token
+    // Create token
     const payload = {
       user: {
         id: user.user_id,
@@ -154,7 +153,7 @@ app.post('/api/workouts', async (req, res) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.user.id; // Get the user's ID
+    const userId = decoded.user.id; 
 
     const newWorkout = await sql`
       INSERT INTO workouts (name, user_id, workout_date)
@@ -221,8 +220,6 @@ app.get('/api/workouts', async (req, res) => {
   }
 });
 
-// --- THIS IS OUR NEW "GET SINGLE WORKOUT" ROUTE (PROTECTED) ---
-
 app.get('/api/workouts/:id', async (req, res) => {
   try {
     const token = req.headers.authorization.split(' ')[1];
@@ -259,8 +256,6 @@ app.get('/api/workouts/:id', async (req, res) => {
   }
 })
 
-// --- THIS IS OUR NEW "PROGRESS ANALYTICS" ROUTE (PROTECTED) ---
-
 app.get('/api/progress/:exerciseId', async (req, res) => {
   try {
     const token = req.headers.authorization.split(' ')[1];
@@ -290,18 +285,15 @@ app.get('/api/progress/:exerciseId', async (req, res) => {
   }
 });
 
-// --- THIS IS OUR NEW "AI COACH" ROUTE (PROTECTED) ---
-
 app.post('/api/coach', async (req, res) => {
   try {
-    // 1. Verify token (Standard security check)
     const token = req.headers.authorization.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Authorization denied' });
     jwt.verify(token, process.env.JWT_SECRET);
 
     const { message } = req.body;
 
-    // 2. Call OpenAI
+    // Call OpenAI
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini", // This is the best cost/performance model right now
       messages: [
@@ -313,7 +305,6 @@ app.post('/api/coach', async (req, res) => {
       ],
     });
 
-    // 3. Send the AI's response back
     res.json({ reply: completion.choices[0].message.content });
 
   } catch (err) {
@@ -322,7 +313,6 @@ app.post('/api/coach', async (req, res) => {
   }
 });
 
-// --- AI ONBOARDING ROUTE ---
 app.post('/api/generate-plan', async (req, res) => {
   try {
     const token = req.headers.authorization.split(' ')[1];
@@ -330,8 +320,6 @@ app.post('/api/generate-plan', async (req, res) => {
     jwt.verify(token, process.env.JWT_SECRET);
 
     const { goal, experience, days } = req.body;
-
-    // 1. Construct the prompt
     const prompt = `
       Create a workout split for a ${experience} lifter who wants to focus on ${goal} and can train ${days} days per week.
       
@@ -343,7 +331,7 @@ app.post('/api/generate-plan', async (req, res) => {
       }
     `;
 
-    // 2. Call OpenAI
+    // Call OpenAI
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -352,9 +340,7 @@ app.post('/api/generate-plan', async (req, res) => {
       ],
     });
 
-    // 3. Parse the text response into a real JSON object
     const rawText = completion.choices[0].message.content;
-    // Cleanup: Sometimes GPT adds ```json ... ``` markdown, we remove it
     const jsonString = rawText.replace(/```json|```/g, '').trim();
     const plan = JSON.parse(jsonString);
 
@@ -366,19 +352,14 @@ app.post('/api/generate-plan', async (req, res) => {
   }
 });
 
-// --- DELETE LOG ROUTE ---
 app.delete('/api/logs/:id', async (req, res) => {
   try {
     const token = req.headers.authorization.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Authorization denied' });
     
-    // Verify token
     jwt.verify(token, process.env.JWT_SECRET);
     const { id } = req.params;
 
-    // Delete the log
-    // Ideally we should check if the log belongs to the user's workout first
-    // but for this MVP, we'll trust the ID.
     await sql`DELETE FROM workout_logs WHERE log_id = ${id}`;
 
     res.json({ message: 'Log deleted' });
@@ -388,7 +369,6 @@ app.delete('/api/logs/:id', async (req, res) => {
   }
 });
 
-// --- DELETE WORKOUT ---
 app.delete('/api/workouts/:id', async (req, res) => {
   try {
     const token = req.headers.authorization.split(' ')[1];
@@ -396,8 +376,6 @@ app.delete('/api/workouts/:id', async (req, res) => {
     jwt.verify(token, process.env.JWT_SECRET);
     
     const { id } = req.params;
-    // Cascade delete handles logs automatically if set up in SQL, 
-    // but explicit delete is safer for now
     await sql`DELETE FROM workouts WHERE workout_id = ${id}`;
     res.json({ message: 'Workout deleted' });
   } catch (err) {
@@ -406,7 +384,6 @@ app.delete('/api/workouts/:id', async (req, res) => {
   }
 });
 
-// --- DELETE EXERCISE ---
 app.delete('/api/exercises/:id', async (req, res) => {
   try {
     const token = req.headers.authorization.split(' ')[1];

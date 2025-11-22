@@ -62,19 +62,10 @@ export const EXERCISE_LIST = {
   ]
 };
 
-// ACCURATE PLATE STANDARDS (1 Rep Max in KG)
-// Calibrated so "Plate Milestones" hit Platinum/Diamond tiers.
-// Gold is "Strong Intermediate". Platinum is "Advanced".
+// Strength standards in kg for each exercise and rank based on research
 export const STRENGTH_STANDARDS = {
-  // --- CHEST ---
-  "Barbell Bench Press": { 
-    Bronze: 60,    // 1 Plate (Novice)
-    Silver: 80,    // Intermediate
-    Gold: 90,      // High Intermediate
-    Platinum: 100, // 2 Plates (Advanced - Top 10-15%)
-    Diamond: 140,  // 3 Plates (Elite - Top 1%)
-    Apex: 160      // World Class
-  },
+  // CHEST 
+  "Barbell Bench Press": { Bronze: 60, Silver: 80, Gold: 90, Platinum: 100, Diamond: 140, Apex: 160 },
   "Incline Bench Press": { Bronze: 50, Silver: 70, Gold: 80, Platinum: 90, Diamond: 120, Apex: 140 },
   "Dumbbell Press": { Bronze: 20, Silver: 30, Gold: 36, Platinum: 42, Diamond: 50, Apex: 60 }, // Per hand
   "Incline Dumbbell Press": { Bronze: 18, Silver: 28, Gold: 34, Platinum: 40, Diamond: 48, Apex: 58 },
@@ -82,15 +73,8 @@ export const STRENGTH_STANDARDS = {
   "Dips": { Bronze: 0, Silver: 10, Gold: 20, Platinum: 40, Diamond: 60, Apex: 80 }, // Added weight
   "Pushups": { Bronze: 0, Silver: 10, Gold: 20, Platinum: 30, Diamond: 50, Apex: 70 }, // Added weight
 
-  // --- BACK ---
-  "Deadlift": { 
-    Bronze: 100,   // 2 Plates
-    Silver: 140,   // 3 Plates
-    Gold: 160,     
-    Platinum: 180, // 4 Plates (Advanced)
-    Diamond: 220,  // 5 Plates (Elite)
-    Apex: 260      // 6 Plates
-  },
+  // BACK
+  "Deadlift": { Bronze: 100, Silver: 140, Gold: 160, Platinum: 180, Diamond: 220, Apex: 260 },
   "Pull Ups": { Bronze: 0, Silver: 5, Gold: 15, Platinum: 30, Diamond: 50, Apex: 70 }, // Added weight
   "Chin Ups": { Bronze: 0, Silver: 5, Gold: 20, Platinum: 35, Diamond: 55, Apex: 75 }, // Added weight
   "Barbell Row": { Bronze: 50, Silver: 70, Gold: 90, Platinum: 100, Diamond: 130, Apex: 150 },
@@ -99,15 +83,8 @@ export const STRENGTH_STANDARDS = {
   "T-Bar Row": { Bronze: 40, Silver: 60, Gold: 80, Platinum: 100, Diamond: 125, Apex: 150 },
   "Single Arm Dumbbell Row": { Bronze: 20, Silver: 30, Gold: 40, Platinum: 50, Diamond: 70, Apex: 90 },
 
-  // --- LEGS ---
-  "Barbell Squat": { 
-    Bronze: 60,    // 1 Plate
-    Silver: 100,   // 2 Plates
-    Gold: 120,     
-    Platinum: 140, // 3 Plates (Advanced)
-    Diamond: 180,  // 4 Plates (Elite)
-    Apex: 220      // 5 Plates
-  },
+  // LEGS 
+  "Barbell Squat": { Bronze: 60, Silver: 100, Gold: 120, Platinum: 140, Diamond: 180, Apex: 220 },
   "Front Squat": { Bronze: 40, Silver: 70, Gold: 90, Platinum: 110, Diamond: 140, Apex: 170 },
   "Leg Press": { Bronze: 150, Silver: 250, Gold: 350, Platinum: 450, Diamond: 550, Apex: 650 },
   "Romanian Deadlift (RDL)": { Bronze: 60, Silver: 100, Gold: 130, Platinum: 150, Diamond: 180, Apex: 220 },
@@ -116,15 +93,8 @@ export const STRENGTH_STANDARDS = {
   "Hamstring Curls": { Bronze: 30, Silver: 50, Gold: 70, Platinum: 90, Diamond: 110, Apex: 130 },
   "Calf Raises": { Bronze: 60, Silver: 100, Gold: 140, Platinum: 180, Diamond: 220, Apex: 260 },
 
-  // --- SHOULDERS ---
-  "Overhead Press (OHP)": { 
-    Bronze: 30, 
-    Silver: 40, 
-    Gold: 50, 
-    Platinum: 60,  // 1 Plate (135lbs) is huge for OHP
-    Diamond: 80, 
-    Apex: 100 
-  },
+  //SHOULDERS 
+  "Overhead Press (OHP)": { Bronze: 30, Silver: 40, Gold: 50, Platinum: 60,  Diamond: 80, Apex: 100 },
   "Seated Dumbbell Press": { Bronze: 14, Silver: 22, Gold: 30, Platinum: 36, Diamond: 46, Apex: 56 }, // Per hand
   "Arnold Press": { Bronze: 12, Silver: 20, Gold: 28, Platinum: 34, Diamond: 44, Apex: 54 },
   "Lateral Raises": { Bronze: 6, Silver: 10, Gold: 14, Platinum: 18, Diamond: 24, Apex: 30 }, // Per hand

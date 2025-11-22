@@ -92,7 +92,6 @@ function Dashboard() {
 
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        {/* LEFT COLUMN: FORMS */}
         <div className="space-y-8">
           
           {/* Create Workout */}
@@ -166,7 +165,6 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: LISTS */}
         <div className="space-y-8">
           {/* Past Workouts */}
           <div className="bg-slate-900 p-6 rounded-xl shadow-xl border border-slate-800">

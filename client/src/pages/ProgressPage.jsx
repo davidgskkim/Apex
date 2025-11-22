@@ -12,6 +12,8 @@ import {
 } from 'chart.js';
 import apiClient from '../api';
 import { useNavigate } from 'react-router-dom';
+// Import the new descriptions
+import { STRENGTH_STANDARDS, RANK_DESCRIPTIONS, getRank } from '../data/strengthStandards';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -20,13 +22,15 @@ function ProgressPage() {
   const [exercises, setExercises] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState('');
   const [chartData, setChartData] = useState(null);
+  const [timeRange, setTimeRange] = useState(7);
   
-  // Default to 7 days as requested
-  const [timeRange, setTimeRange] = useState(7); 
+  // State for Rank & Modal
+  const [rank, setRank] = useState(null);
+  const [showRankModal, setShowRankModal] = useState(false); // <--- Modal State
+  const [isLoading, setIsLoading] = useState(false);
 
   const calculateE1RM = (weight, reps) => weight * (1 + reps / 30);
 
-  // 1. Helper to generate every single date in the range
   const generateDateLabels = (days) => {
     const dates = [];
     const today = new Date();
@@ -36,6 +40,19 @@ function ProgressPage() {
       dates.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
     }
     return dates;
+  };
+
+  // Helper to get color based on rank
+  const getRankColor = (r) => {
+    switch(r) {
+      case 'Apex': return 'text-purple-600';
+      case 'Diamond': return 'text-blue-500';
+      case 'Platinum': return 'text-cyan-500';
+      case 'Gold': return 'text-yellow-500';
+      case 'Silver': return 'text-gray-400';
+      case 'Bronze': return 'text-orange-700';
+      default: return 'text-gray-500';
+    }
   };
 
   useEffect(() => {
@@ -53,52 +70,54 @@ function ProgressPage() {
     if (!selectedExercise) return;
     
     const fetchProgress = async () => {
+      setIsLoading(true); // <--- START LOADING
+      setChartData(null); // Reset chart while loading
       try {
         const response = await apiClient.get(`/progress/${selectedExercise}`);
         const rawHistory = response.data;
 
-        // Create the continuous timeline
-        const labels = generateDateLabels(timeRange);
-        const dataPoints = new Array(timeRange).fill(null); // Start with all nulls (gaps)
+        if (rawHistory.length === 0) {
+          setChartData(null);
+          setRank(null);
+          setIsLoading(false);
+          return;
+        }
 
-        // Map actual logs to the timeline
+        // Rank Logic
+        const maxWeightEver = Math.max(...rawHistory.map(log => parseFloat(log.weight_kg)));
+        const currentExerciseName = exercises.find(e => e.exercise_id == selectedExercise)?.name;
+        const currentRank = getRank(currentExerciseName, maxWeightEver);
+        setRank(currentRank);
+
+        // Chart Logic
+        const labels = generateDateLabels(timeRange);
+        const dataPoints = new Array(timeRange).fill(null);
         const today = new Date();
-        // Normalize today to midnight for accurate comparison
         today.setHours(0, 0, 0, 0);
 
         rawHistory.forEach(log => {
           const logDate = new Date(log.workout_date);
           logDate.setHours(0, 0, 0, 0);
-
-          // Calculate how many days ago this log was
           const diffTime = today - logDate;
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-          // If this log falls within our selected range
           if (diffDays < timeRange && diffDays >= 0) {
-            // The index in our array is (Length - 1) - DaysAgo
             const index = (timeRange - 1) - diffDays;
-            
             const e1rm = calculateE1RM(parseFloat(log.weight_kg), log.reps);
-            
-            // If we already have a log for this day, keep the best one
             if (dataPoints[index] === null || e1rm > dataPoints[index]) {
               dataPoints[index] = e1rm;
             }
           }
         });
 
-        // Ideal Trend Calculation (2.5% per week = ~0.35% per day)
-        // Find first actual data point to start the trend
+        // Ideal Trend Logic
         const firstValidIndex = dataPoints.findIndex(val => val !== null);
         let idealData = [];
-        
         if (firstValidIndex !== -1) {
           const startScore = dataPoints[firstValidIndex];
           idealData = labels.map((_, i) => {
             if (i < firstValidIndex) return null;
             const daysPassed = i - firstValidIndex;
-            // 0.0035 is approx 2.5% divided by 7 days
             return startScore * (1 + 0.0035 * daysPassed);
           });
         }
@@ -112,7 +131,7 @@ function ProgressPage() {
               borderColor: 'rgb(75, 192, 192)',
               backgroundColor: 'rgba(75, 192, 192, 0.5)',
               tension: 0.1,
-              spanGaps: true, // <--- THIS IS MAGIC: Connects dots over empty days
+              spanGaps: true,
               pointRadius: 5,
               pointHoverRadius: 8
             },
@@ -128,7 +147,11 @@ function ProgressPage() {
           ],
         });
 
-      } catch (err) { console.error(err); }
+      } catch (err) { 
+        console.error(err); 
+      } finally {
+        setIsLoading(false); // <--- STOP LOADING (Done)
+      }
     };
     fetchProgress();
   }, [selectedExercise, timeRange]);
@@ -141,63 +164,119 @@ function ProgressPage() {
         </button>
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <h1 className="text-2xl font-bold text-gray-800">Progress Analytics</h1>
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Progress Analytics</h1>
+              <div className="flex items-center gap-3 mt-1">
+                {rank && (
+                  <span className="text-sm font-medium text-gray-500">
+                    Current Rank: <span className={`font-bold text-lg ${getRankColor(rank)}`}>{rank}</span>
+                  </span>
+                )}
+                {/* --- THE NEW BUTTON --- */}
+                <button 
+                  onClick={() => setShowRankModal(true)}
+                  className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded border"
+                >
+                  ℹ️ View Distribution
+                </button>
+              </div>
+            </div>
             
             <div className="flex gap-4">
-               {/* Time Range Selector */}
-               <select 
-                value={timeRange} 
-                onChange={(e) => setTimeRange(parseInt(e.target.value))}
-                className="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm"
-              >
+               <select value={timeRange} onChange={(e) => setTimeRange(parseInt(e.target.value))} className="border p-2 rounded bg-white text-sm">
                 <option value={7}>Last 7 Days</option>
                 <option value={30}>Last 30 Days</option>
                 <option value={90}>Last 3 Months</option>
-              </select>
-
-              {/* Exercise Selector */}
-              <select 
-                value={selectedExercise} 
-                onChange={(e) => setSelectedExercise(e.target.value)}
-                className="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white font-bold"
-              >
-                {exercises.map(ex => (
-                  <option key={ex.exercise_id} value={ex.exercise_id}>{ex.name}</option>
-                ))}
-              </select>
+               </select>
+               <select value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)} className="border p-2 rounded bg-white font-bold">
+                {exercises.map(ex => (<option key={ex.exercise_id} value={ex.exercise_id}>{ex.name}</option>))}
+               </select>
             </div>
           </div>
 
-          <div className="h-96 w-full">
-            {chartData ? (
+          {/* Chart */}
+          <div className="h-96 w-full mb-8 flex items-center justify-center">
+            {isLoading ? (
+              // State 1: Loading
+              <div className="text-gray-500 animate-pulse">Loading chart data...</div>
+            ) : chartData ? (
+              // State 2: Chart exists
               <Line 
                 data={chartData} 
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
-                  scales: {
-                    y: { title: { display: true, text: 'Strength Score' } }
-                  },
+                  scales: { y: { title: { display: true, text: 'Strength Score' } } },
                   plugins: {
-                    tooltip: {
-                      callbacks: {
-                        label: function(context) {
-                           return context.parsed.y ? `Score: ${context.parsed.y.toFixed(1)}` : '';
-                        }
-                      }
-                    }
+                    tooltip: { callbacks: { label: (c) => c.parsed.y ? `Score: ${c.parsed.y.toFixed(1)}` : '' } }
                   }
                 }} 
               />
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-400">
-                Loading chart...
+              // State 3: No Data (The fix you wanted)
+              <div className="text-center">
+                <p className="text-gray-500 mb-2">No logs found for this exercise yet.</p>
+                <button 
+                  onClick={() => navigate('/')}
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  Go log a workout to see your progress! →
+                </button>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* --- RANK DISTRIBUTION MODAL --- */}
+      {showRankModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button 
+              onClick={() => setShowRankModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+            
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Rank Distribution</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Standards for <strong>{exercises.find(e => e.exercise_id == selectedExercise)?.name}</strong> (1 Rep Max)
+            </p>
+
+            {/* Render the Table for this Exercise */}
+            {STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise)?.name] ? (
+              <div className="space-y-3">
+                {Object.entries(STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise).name])
+                  .reverse() // Show Apex at top
+                  .map(([rankName, weight]) => (
+                  <div key={rankName} className="flex justify-between items-center border-b pb-2 last:border-0">
+                    <div className="flex flex-col">
+                      <span className={`font-bold ${getRankColor(rankName)}`}>{rankName}</span>
+                      <span className="text-xs text-gray-400">{RANK_DESCRIPTIONS[rankName]}</span>
+                    </div>
+                    <span className="font-mono font-bold text-gray-700">{weight} kg</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">No official ranked standards for this exercise yet.</p>
+            )}
+            
+            <div className="mt-6 text-center">
+              <button 
+                onClick={() => setShowRankModal(false)}
+                className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 font-medium w-full"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

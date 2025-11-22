@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../api';
+import { EXERCISE_LIST } from '../data/strengthStandards';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -142,22 +143,46 @@ function Dashboard() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-bold mb-4 text-gray-700">Add New Exercise</h2>
             <form onSubmit={handleCreateExercise} className="space-y-4">
-              <input
-                type="text"
-                value={exerciseName}
-                onChange={(e) => setExerciseName(e.target.value)}
-                placeholder="Exercise Name"
-                className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                required
-              />
-              <input
-                type="text"
-                value={exerciseCategory}
-                onChange={(e) => setExerciseCategory(e.target.value)}
-                placeholder="Category (e.g., Chest)"
-                className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                required
-              />
+              
+              {/* 1. CATEGORY DROPDOWN */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Category</label>
+                <select
+                  value={exerciseCategory}
+                  onChange={(e) => {
+                    const newCategory = e.target.value;
+                    setExerciseCategory(newCategory);
+                    // Automatically select the first exercise in this new category
+                    setExerciseName(EXERCISE_LIST[newCategory][0]);
+                  }}
+                  className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                >
+                  <option value="" disabled>Select a Category</option>
+                  {Object.keys(EXERCISE_LIST).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 2. EXERCISE DROPDOWN (Dependent on Category) */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Exercise Name</label>
+                <select
+                  value={exerciseName}
+                  onChange={(e) => setExerciseName(e.target.value)}
+                  className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                  disabled={!exerciseCategory} // Disable if no category selected
+                >
+                  {!exerciseCategory ? (
+                    <option>Select a category first</option>
+                  ) : (
+                    EXERCISE_LIST[exerciseCategory].map(ex => (
+                      <option key={ex} value={ex}>{ex}</option>
+                    ))
+                  )}
+                </select>
+              </div>
+
               <button type="submit" className="w-full bg-gray-800 text-white py-2 rounded hover:bg-gray-900 font-bold">
                 Add Exercise
               </button>

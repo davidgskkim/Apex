@@ -73,9 +73,9 @@ Apex is a full-stack fitness application designed to help lifters track progress
 
 ## 📸 Screenshots
 
-| Dashboard | Analytics |
+| Dashboard | Analytics | Lighthouse Scores
 |:---:|:---:|
-| ![Dashboard](./assets/dashboard.png) | ![Analytics](./assets/analytics.png) |
+| ![Dashboard](./assets/dashboard.png) | ![Analytics](./assets/analytics.png) | ![Lighthouse Scores](./assets/100_Lighthouse_Score.png)
 
 ## 👤 Author
 

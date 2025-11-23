@@ -403,6 +403,12 @@ app.delete('/api/exercises/:id', async (req, res) => {
 });
 
 const PORT = 5000
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`)
-})
+// Only start the server if this file is run directly (not imported by tests)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
+
+// Export the app for testing
+module.exports = app;

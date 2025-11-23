@@ -1,5 +1,14 @@
+type RankStandards = {
+  Bronze: number;
+  Silver: number;
+  Gold: number;
+  Platinum: number;
+  Diamond: number;
+  Apex: number;
+};
+
 // Categories and their exercises
-export const EXERCISE_LIST = {
+export const EXERCISE_LIST: Record<string, string[]> = {
   "Chest": [
     "Barbell Bench Press", 
     "Incline Bench Press", 
@@ -63,7 +72,7 @@ export const EXERCISE_LIST = {
 };
 
 // Strength standards in kg for each exercise and rank based on research
-export const STRENGTH_STANDARDS = {
+export const STRENGTH_STANDARDS: Record<string, RankStandards> = {
   // CHEST 
   "Barbell Bench Press": { Bronze: 60, Silver: 80, Gold: 90, Platinum: 100, Diamond: 140, Apex: 160 },
   "Incline Bench Press": { Bronze: 50, Silver: 70, Gold: 80, Platinum: 90, Diamond: 120, Apex: 140 },
@@ -121,7 +130,7 @@ export const STRENGTH_STANDARDS = {
   "Cable Crunch": { Bronze: 30, Silver: 50, Gold: 70, Platinum: 90, Diamond: 110, Apex: 130 },
 };
 
-export const RANK_DESCRIPTIONS = {
+export const RANK_DESCRIPTIONS: Record<string, string> = {
   "Bronze": "Beginner (Top 90%)",
   "Silver": "Novice (Top 60%)",
   "Gold": "Intermediate (Top 35%)",
@@ -130,7 +139,9 @@ export const RANK_DESCRIPTIONS = {
   "Apex": "World Class (Top 0.1%)"
 };
 
-export const getRank = (exerciseName, weight) => {
+export const getRank = (exerciseName: string | undefined, weight: number): string | null => {
+  if (!exerciseName) return null;
+  
   const standards = STRENGTH_STANDARDS[exerciseName];
   if (!standards) return null;
 

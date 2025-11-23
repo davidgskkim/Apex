@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../api';
 import { EXERCISE_LIST } from '../data/strengthStandards';
+import { Exercise, Workout } from '../types';
 
 function Dashboard() {
   const navigate = useNavigate();
-  const [exercises, setExercises] = useState([]);
-  const [workouts, setWorkouts] = useState([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
   
   const [exerciseName, setExerciseName] = useState('');
   const [exerciseCategory, setExerciseCategory] = useState('');
@@ -22,7 +23,7 @@ function Dashboard() {
     try {
       const response = await apiClient.get('/exercises');
       setExercises(response.data);
-    } catch (err) {
+    } catch (err: any) {
       if (err.response?.status === 401) handleLogout();
     }
   }, [handleLogout]);
@@ -31,7 +32,7 @@ function Dashboard() {
     try {
       const response = await apiClient.get('/workouts');
       setWorkouts(response.data);
-    } catch (err) {
+    } catch (err: any) {
       if (err.response?.status === 401) handleLogout();
     }
   }, [handleLogout]);
@@ -41,7 +42,7 @@ function Dashboard() {
     fetchWorkouts();
   }, [fetchExercises, fetchWorkouts]);
 
-  const handleCreateExercise = async (e) => {
+  const handleCreateExercise = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await apiClient.post('/exercises', { name: exerciseName, category: exerciseCategory });
@@ -51,7 +52,7 @@ function Dashboard() {
     } catch (err) { console.error(err); }
   };
 
-  const handleCreateWorkout = async (e) => {
+  const handleCreateWorkout = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await apiClient.post('/workouts', { name: workoutName, date: workoutDate });
@@ -61,12 +62,12 @@ function Dashboard() {
     } catch (err) { console.error(err); }
   };
 
-  const handleDeleteWorkout = async (id) => {
+  const handleDeleteWorkout = async (id: number) => {
     if (!window.confirm('Delete this workout?')) return;
     try { await apiClient.delete(`/workouts/${id}`); fetchWorkouts(); } catch (err) { console.error(err); }
   };
 
-  const handleDeleteExercise = async (id) => {
+  const handleDeleteExercise = async (id: number) => {
     if (!window.confirm('Delete this exercise?')) return;
     try { await apiClient.delete(`/exercises/${id}`); fetchExercises(); } catch (err) { console.error(err); }
   };

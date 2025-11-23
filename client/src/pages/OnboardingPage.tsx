@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api';
+
+interface GeneratedPlan {
+  splitName: string;
+  description: string;
+  workouts: string[];
+}
 
 function OnboardingPage() {
   const navigate = useNavigate();
@@ -10,7 +16,7 @@ function OnboardingPage() {
   const [goal, setGoal] = useState('Build Muscle');
   const [experience, setExperience] = useState('Beginner');
   const [days, setDays] = useState('3');
-  const [generatedPlan, setGeneratedPlan] = useState(null);
+  const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -28,6 +34,8 @@ function OnboardingPage() {
 
   const handleSaveAndFinish = async () => {
     setLoading(true);
+    if (!generatedPlan) return;
+    
     try {
       const today = new Date();
       const promises = generatedPlan.workouts.map((workoutName, index) => {

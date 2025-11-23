@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -14,22 +14,24 @@ import {
 import apiClient from '../api';
 import { useNavigate } from 'react-router-dom';
 import { STRENGTH_STANDARDS, RANK_DESCRIPTIONS, getRank } from '../data/strengthStandards';
+import { Exercise } from '../types';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 function ProgressPage() {
   const navigate = useNavigate();
-  const [exercises, setExercises] = useState([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [selectedExercise, setSelectedExercise] = useState('');
-  const [chartData, setChartData] = useState(null);
+  const [chartData, setChartData] = useState<any>(null);
   const [timeRange, setTimeRange] = useState(7);
-  const [rank, setRank] = useState(null);
+  const [rank, setRank] = useState<string | null>(null);
   const [showRankModal, setShowRankModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const calculateE1RM = (weight, reps) => weight * (1 + reps / 30);
+  // Epley formula for estimated 1RM
+  const calculateE1RM = (weight: number, reps: number) => weight * (1 + reps / 30);
 
-  const generateDateLabels = (days) => {
+  const generateDateLabels = (days: number) => {
     const dates = [];
     const today = new Date();
     for (let i = days - 1; i >= 0; i--) {
@@ -40,7 +42,7 @@ function ProgressPage() {
     return dates;
   };
 
-  const getRankColor = (r) => {
+  const getRankColor = (r: string) => {
     switch(r) {
       case 'Apex': return 'text-purple-400';
       case 'Diamond': return 'text-cyan-400';
@@ -52,7 +54,7 @@ function ProgressPage() {
     }
   };
 
-  const getBorderColor = (r) => {
+  const getBorderColor = (r: string) => {
     switch(r) {
       case 'Apex': return 'border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]';
       case 'Diamond': return 'border-cyan-500';
@@ -69,7 +71,7 @@ function ProgressPage() {
       try {
         const response = await apiClient.get('/exercises');
         setExercises(response.data);
-        if (response.data.length > 0) setSelectedExercise(response.data[0].exercise_id);
+        if (response.data.length > 0) setSelectedExercise(String(response.data[0].exercise_id));
       } catch (err) { console.error(err); }
     };
     fetchExercises();
@@ -82,7 +84,7 @@ function ProgressPage() {
       setChartData(null);
       try {
         const response = await apiClient.get(`/progress/${selectedExercise}`);
-        const rawHistory = response.data;
+        const rawHistory: any[] = response.data;
 
         if (rawHistory.length === 0) {
           setChartData(null);
@@ -92,9 +94,11 @@ function ProgressPage() {
         }
 
         const maxWeightEver = Math.max(...rawHistory.map(log => parseFloat(log.weight_kg)));
-        const currentExerciseName = exercises.find(e => e.exercise_id == selectedExercise)?.name;
-        const currentRank = getRank(currentExerciseName, maxWeightEver);
-        setRank(currentRank);
+        const currentExerciseName = exercises.find(e => String(e.exercise_id) === selectedExercise)?.name;
+        if (currentExerciseName) {
+            const currentRank = getRank(currentExerciseName, maxWeightEver);
+            setRank(currentRank);
+        }
 
         const labels = generateDateLabels(timeRange);
         const dataPoints = new Array(timeRange).fill(null);
@@ -104,7 +108,7 @@ function ProgressPage() {
         rawHistory.forEach(log => {
           const logDate = new Date(log.workout_date);
           logDate.setHours(0, 0, 0, 0);
-          const diffTime = today - logDate;
+          const diffTime = today.getTime() - logDate.getTime();
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
           if (diffDays < timeRange && diffDays >= 0) {
@@ -117,7 +121,7 @@ function ProgressPage() {
         });
 
         const firstValidIndex = dataPoints.findIndex(val => val !== null);
-        let idealData = [];
+        let idealData: (number | null)[] = [];
         if (firstValidIndex !== -1) {
           const startScore = dataPoints[firstValidIndex];
           idealData = labels.map((_, i) => {
@@ -155,7 +159,7 @@ function ProgressPage() {
       } catch (err) { console.error(err); } finally { setIsLoading(false); }
     };
     fetchProgress();
-  }, [selectedExercise, timeRange]);
+  }, [selectedExercise, timeRange, exercises]);
 
   const RANK_ORDER = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Apex"];
 
@@ -166,9 +170,7 @@ function ProgressPage() {
           ← Back to Dashboard
         </button>
 
-        {/* Main Card: Dark Mode */}
         <div className="bg-slate-900 p-6 rounded-xl shadow-xl border border-slate-800">
-          
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
@@ -179,7 +181,7 @@ function ProgressPage() {
                     Current Rank: <span className={`font-bold text-lg ${getRankColor(rank)}`}>{rank}</span>
                   </span>
                   <button onClick={() => setShowRankModal(true)} className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700 transition">
-                    ℹ️ Info
+                    ℹ️ View Distribution
                   </button>
                 </div>
               )}
@@ -197,7 +199,7 @@ function ProgressPage() {
             </div>
           </div>
 
-          {/* Chart Section (Dark Mode Options) */}
+          {/* Chart */}
           <div className="h-96 w-full mb-12 flex items-center justify-center">
             {isLoading ? (
               <div className="text-slate-500 animate-pulse">Loading chart data...</div>
@@ -243,11 +245,13 @@ function ProgressPage() {
           <div className="mt-12 pt-6 border-t border-slate-800">
             <h3 className="font-bold text-slate-400 mb-8 text-sm uppercase tracking-wide text-center">🏆 Rank Standards (Est. 1RM)</h3>
             
-            {exercises.find(e => e.exercise_id == selectedExercise)?.name && STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise).name] ? (
+            {exercises.find(e => String(e.exercise_id) === selectedExercise)?.name && STRENGTH_STANDARDS[exercises.find(e => String(e.exercise_id) === selectedExercise)!.name] ? (
               
               <div className="flex items-end justify-between gap-2 h-48 px-2">
                 {RANK_ORDER.map((rankName, index) => {
-                  const weight = STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise).name][rankName];
+                  const exerciseName = exercises.find(e => String(e.exercise_id) === selectedExercise)!.name;
+                  // @ts-ignore
+                  const weight = STRENGTH_STANDARDS[exerciseName][rankName];
                   const heightPercent = 20 + (index * 16); 
                   
                   return (
@@ -278,26 +282,41 @@ function ProgressPage() {
         </div>
       </div>
 
-      {/* Dark Mode Modal */}
+      {/* Modal */}
       {showRankModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 rounded-xl shadow-2xl max-w-md w-full p-6 relative border border-slate-700">
             <button onClick={() => setShowRankModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition">✕</button>
+            
             <h2 className="text-xl font-bold text-white mb-4">Rank Distribution</h2>
-            <p className="text-sm text-slate-400 mb-4">Standards for <strong>{exercises.find(e => e.exercise_id == selectedExercise)?.name}</strong> (1 Rep Max)</p>
-            {STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise)?.name] && (
-              <div className="space-y-3">
-                {Object.entries(STRENGTH_STANDARDS[exercises.find(e => e.exercise_id == selectedExercise).name]).reverse().map(([rankName, weight]) => (
-                  <div key={rankName} className="flex justify-between items-center border-b border-slate-800 pb-2 last:border-0">
-                    <div className="flex flex-col">
-                      <span className={`font-bold ${getRankColor(rankName)}`}>{rankName}</span>
-                      <span className="text-xs text-slate-500">{RANK_DESCRIPTIONS[rankName]}</span>
+            
+            <p className="text-sm text-slate-400 mb-4">
+              Standards for <strong>{exercises.find(e => String(e.exercise_id) === selectedExercise)?.name}</strong> (1 Rep Max)
+            </p>
+
+            {(() => {
+              const ex = exercises.find(e => String(e.exercise_id) === selectedExercise);
+              const standards = ex ? STRENGTH_STANDARDS[ex.name] : null;
+
+              return standards ? (
+                <div className="space-y-3">
+                  {Object.entries(standards).reverse().map(([rankName, weight]) => (
+                    <div key={rankName} className="flex justify-between items-center border-b border-slate-800 pb-2 last:border-0">
+                      <div className="flex flex-col">
+                        <span className={`font-bold ${getRankColor(rankName)}`}>{rankName}</span>
+                        <span className="text-xs text-slate-500">
+                            {(RANK_DESCRIPTIONS as any)[rankName]}
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold text-slate-300">{weight} kg</span>
                     </div>
-                    <span className="font-mono font-bold text-slate-300">{weight} kg</span>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 italic">No official ranked standards for this exercise yet.</p>
+              );
+            })()}
+            
             <div className="mt-6 text-center">
               <button onClick={() => setShowRankModal(false)} className="bg-slate-800 text-white px-4 py-2 rounded hover:bg-slate-700 font-medium w-full transition">Close</button>
             </div>

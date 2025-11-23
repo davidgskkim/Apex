@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import apiClient from '../api';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,7 +8,7 @@ function CoachPage() {
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim()) return;
     setLoading(true);
@@ -39,7 +39,7 @@ function CoachPage() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="e.g., How deep should I squat?"
-              rows="3"
+              rows={3}
               className="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-white focus:ring-2 focus:ring-purple-500 outline-none mb-4 resize-none"
             />
             <button 

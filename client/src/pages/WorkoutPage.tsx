@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../api';
+import { WorkoutLog, Exercise } from '../types';
 
 function WorkoutPage() {
-  const [logs, setLogs] = useState([]);
-  const [exercises, setExercises] = useState([]); 
-  const [selectedExercise, setSelectedExercise] = useState('');
+  const [logs, setLogs] = useState<WorkoutLog[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+
+  const [selectedExercise, setSelectedExercise] = useState<string>('');
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
   const [weight, setWeight] = useState('');
@@ -23,7 +25,7 @@ function WorkoutPage() {
     try {
       const response = await apiClient.get(`/workouts/${workoutId}`);
       setLogs(response.data);
-    } catch (err) {
+    } catch (err: any) {
       if (err.response?.status === 401) handleLogout();
     }
   }, [workoutId, handleLogout]);
@@ -36,7 +38,7 @@ function WorkoutPage() {
         if (response.data.length > 0) {
           setSelectedExercise(response.data[0].exercise_id);
         }
-      } catch (err) {
+      } catch (err: any) {
         if (err.response?.status === 401) handleLogout();
       }
     };
@@ -44,7 +46,7 @@ function WorkoutPage() {
     fetchLogs(); 
   }, [workoutId, handleLogout, fetchLogs]);
 
-  const handleAddLog = async (e) => {
+  const handleAddLog = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await apiClient.post('/logs', {
@@ -63,7 +65,7 @@ function WorkoutPage() {
     } catch (err) { console.error(err); }
   };
 
-  const handleDeleteLog = async (logId) => {
+  const handleDeleteLog = async (logId: number) => {
     if (!window.confirm('Are you sure?')) return;
     try { await apiClient.delete(`/logs/${logId}`); fetchLogs(); } catch (err) { console.error(err); }
   };

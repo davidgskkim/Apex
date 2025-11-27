@@ -55,23 +55,23 @@ function Dashboard() {
   const handleCreateWorkout = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-        let dateToSend = workoutDate; // Start with the YYYY-MM-DD string
+      let dateToSend = workoutDate; 
+      
+      if (workoutDate) {
+        const parts = workoutDate.split('-');
+        const year = parseInt(parts[0]);
+        const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+        const day = parseInt(parts[2]);
+
+        const dateObj = new Date(year, month, day, 12, 0, 0);
         
-        if (workoutDate) {
-            const dateObj = new Date(workoutDate); 
-            
-            // Set the time to Noon (12:00:00) LOCAL TIME
-            // This prevents the date from slipping back a day when converted to UTC
-            dateObj.setHours(12, 0, 0, 0); 
-            
-            // Send the full ISO string
-            dateToSend = dateObj.toISOString();
-        }
+        dateToSend = dateObj.toISOString();
+      }
 
       await apiClient.post('/workouts', { name: workoutName, date: dateToSend });
 
       setWorkoutName('');
-      setWorkoutDate(''); 
+      setWorkoutDate('');
       fetchWorkouts(); 
     } catch (err) { console.error(err); }
   };

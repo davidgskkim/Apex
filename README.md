@@ -1,5 +1,8 @@
 # 🏔️ Apex - AI-Powered Strength Tracker
 
+![Status](https://img.shields.io/badge/Status-Production%20Ready-success)
+![Stack](https://img.shields.io/badge/Stack-React%20|%20Node.js%20|%20PostgreSQL%20|%20Tailwind%20|%20OpenAI-6366f1)
+
 Apex is a full-stack fitness application designed to help lifters track progressive overload and optimize their training. It features a custom-built workout logger, advanced analytics with trend visualization, and an AI-powered strength coach.
 
 **Live Demo:** [https://apex-david-kim.vercel.app](https://apex-david-kim.vercel.app)
